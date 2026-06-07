@@ -1,0 +1,270 @@
+{
+  "info": {
+    "name": "TodoCamisetas API v2",
+    "description": "Colección completa. Importar en Postman: File → Import → seleccionar este archivo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api", "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "🧢 CAMISETAS",
+      "item": [
+        {
+          "name": "PRUEBA 1 – GET Listar camisetas",
+          "request": { "method": "GET", "url": "{{base_url}}/camisetas",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","status":"OK","code":200,
+            "body":"{\"data\":[{\"id\":1,\"titulo\":\"Camiseta Local 2025\",\"precio\":\"45000.00\",\"tallas\":[{\"id\":2,\"nombre\":\"M\",\"pivot\":{\"stock\":20}}]}]}"}]
+        },
+        {
+          "name": "PRUEBA 2 – POST Crear camiseta",
+          "request": { "method": "POST", "url": "{{base_url}}/camisetas",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"titulo\": \"Camiseta Local 2025 – Selección Chilena\",\n  \"club\": \"Selección Chilena\",\n  \"pais\": \"Chile\",\n  \"tipo\": \"Local\",\n  \"color\": \"Rojo y Azul\",\n  \"precio\": 45000,\n  \"precio_oferta\": 38000,\n  \"detalles\": \"Edición aniversario 2025\",\n  \"codigo_producto\": \"SCL2025L\",\n  \"tallas\": [\n    {\"talla_id\": 1, \"stock\": 10},\n    {\"talla_id\": 2, \"stock\": 20}\n  ]\n}"}},
+          "response": [
+            {"name":"201 Created","status":"Created","code":201,"body":"{\"data\":{\"id\":1,\"titulo\":\"Camiseta Local 2025 – Selección Chilena\",\"codigo_producto\":\"SCL2025L\"},\"message\":\"Camiseta creada correctamente.\"}"},
+            {"name":"422 Validation Error","status":"Unprocessable Entity","code":422,"body":"{\"message\":\"Error de validación.\",\"errors\":{\"titulo\":[\"El campo titulo es requerido.\"]}}"}
+          ]
+        },
+        {
+          "name": "PRUEBA 3 – GET Ver camiseta por ID",
+          "request": { "method": "GET", "url": "{{base_url}}/camisetas/1",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [
+            {"name":"200 OK","status":"OK","code":200,"body":"{\"data\":{\"id\":1,\"titulo\":\"Camiseta Local 2025\"}}"},
+            {"name":"404 Not Found","status":"Not Found","code":404,"body":"{\"message\":\"Camiseta no encontrada.\"}"}
+          ]
+        },
+        {
+          "name": "PRUEBA 4 – PUT Actualizar camiseta",
+          "request": { "method": "PUT", "url": "{{base_url}}/camisetas/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"precio\": 48000,\n  \"precio_oferta\": 40000,\n  \"tallas\": [{\"talla_id\": 2, \"stock\": 25}]\n}"}},
+          "response": [{"name":"200 OK","status":"OK","code":200,"body":"{\"data\":{\"id\":1,\"precio\":\"48000.00\"},\"message\":\"Camiseta actualizada correctamente.\"}"}]
+        },
+        {
+          "name": "PRUEBA 5 – PATCH Actualizar campo específico",
+          "request": { "method": "PATCH", "url": "{{base_url}}/camisetas/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"precio_oferta\": 36000\n}"}},
+          "response": [{"name":"200 OK","status":"OK","code":200,"body":"{\"data\":{\"precio_oferta\":\"36000.00\"},\"message\":\"Camiseta actualizada correctamente.\"}"}]
+        },
+        {
+          "name": "PRUEBA 6 – DELETE Eliminar camiseta",
+          "request": { "method": "DELETE", "url": "{{base_url}}/camisetas/1",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","status":"OK","code":200,"body":"{\"message\":\"Camiseta eliminada correctamente.\"}"}]
+        },
+        {
+          "name": "EXTRA – GET Precio final (cliente preferencial)",
+          "request": { "method": "GET",
+            "url": {"raw":"{{base_url}}/camisetas/1/precio?cliente_id=1","query":[{"key":"cliente_id","value":"1"}]},
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 Preferencial","status":"OK","code":200,"body":"{\"data\":{\"precio_final\":38000,\"descuento_aplicado\":\"precio_oferta\",\"cliente_categoria\":\"Preferencial\"}}"},
+            {"name":"200 Regular","status":"OK","code":200,"body":"{\"data\":{\"precio_final\":45000,\"descuento_aplicado\":\"ninguno\",\"cliente_categoria\":\"Regular\"}}"}]
+        }
+      ]
+    },
+
+    {
+      "name": "👥 CLIENTES",
+      "item": [
+        {
+          "name": "PRUEBA 1 – GET Listar clientes",
+          "request": { "method": "GET", "url": "{{base_url}}/clientes",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","status":"OK","code":200,"body":"{\"data\":[{\"id\":1,\"nombre_comercial\":\"90minutos\",\"categoria\":\"Preferencial\"}],\"total\":2}"}]
+        },
+        {
+          "name": "PRUEBA 2 – POST Crear cliente (RUT válido)",
+          "request": { "method": "POST", "url": "{{base_url}}/clientes",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"nombre_comercial\": \"90minutos\",\n  \"rut\": \"76.123.456-7\",\n  \"direccion\": \"Providencia, Santiago\",\n  \"categoria\": \"Preferencial\",\n  \"contacto_nombre\": \"Pedro Rojas\",\n  \"contacto_email\": \"compras@90minutos.cl\",\n  \"porcentaje_oferta\": 15\n}"}},
+          "response": [
+            {"name":"201 Created","status":"Created","code":201,"body":"{\"data\":{\"id\":1,\"nombre_comercial\":\"90minutos\",\"rut\":\"76.123.456-7\"},\"message\":\"Cliente creado correctamente.\"}"},
+            {"name":"422 RUT inválido","status":"Unprocessable Entity","code":422,"body":"{\"message\":\"El RUT ingresado no es válido.\",\"rut\":\"12.345.678-0\"}"}
+          ]
+        },
+        {
+          "name": "PRUEBA 3 – GET Ver cliente con contactos",
+          "request": { "method": "GET", "url": "{{base_url}}/clientes/1",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":{\"id\":1,\"nombre_comercial\":\"90minutos\",\"contactos_empresa\":[],\"contactos_personal\":[]}}"}]
+        },
+        {
+          "name": "PRUEBA 4 – PUT Actualizar cliente",
+          "request": { "method": "PUT", "url": "{{base_url}}/clientes/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"porcentaje_oferta\": 20,\n  \"categoria\": \"Preferencial\"\n}"}},
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":{\"porcentaje_oferta\":\"20.00\"},\"message\":\"Cliente actualizado correctamente.\"}"}]
+        },
+        {
+          "name": "PRUEBA 5 – PATCH Actualizar campo específico",
+          "request": { "method": "PATCH", "url": "{{base_url}}/clientes/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"porcentaje_oferta\": 25\n}"}},
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":{\"porcentaje_oferta\":\"25.00\"},\"message\":\"Cliente actualizado correctamente.\"}"}]
+        },
+        {
+          "name": "PRUEBA 6 – DELETE Eliminar cliente",
+          "request": { "method": "DELETE", "url": "{{base_url}}/clientes/1",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [
+            {"name":"200 OK","code":200,"body":"{\"message\":\"Cliente eliminado correctamente.\"}"},
+            {"name":"409 Con ventas","code":409,"body":"{\"message\":\"No se puede eliminar el cliente porque tiene ventas registradas.\"}"}
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "🏢 CONTACTOS EMPRESA",
+      "item": [
+        {
+          "name": "PRUEBA 1 – GET Listar contactos empresa",
+          "request": { "method": "GET", "url": "{{base_url}}/clientes/1/contactos-empresa",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":[],\"cliente\":\"90minutos\",\"total\":0}"}]
+        },
+        {
+          "name": "PRUEBA 2 – POST Crear contacto empresa",
+          "request": { "method": "POST", "url": "{{base_url}}/clientes/1/contactos-empresa",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"razon_social\": \"90minutos SpA\",\n  \"rut_empresa\": \"76.123.456-7\",\n  \"giro\": \"Comercio al por menor de artículos deportivos\",\n  \"direccion_fiscal\": \"Av. Providencia 1234, Of. 56\",\n  \"ciudad\": \"Santiago\",\n  \"region\": \"Metropolitana\",\n  \"telefono_empresa\": \"+56 2 2345 6789\",\n  \"email_empresa\": \"admin@90minutos.cl\",\n  \"sitio_web\": \"https://www.90minutos.cl\",\n  \"tipo_contacto\": \"Principal\"\n}"}},
+          "response": [
+            {"name":"201 Created","code":201,"body":"{\"data\":{\"id\":1,\"razon_social\":\"90minutos SpA\",\"rut_empresa\":\"76.123.456-7\"},\"message\":\"Contacto de empresa creado correctamente.\"}"},
+            {"name":"422 RUT inválido","code":422,"body":"{\"message\":\"El RUT de empresa ingresado no es válido.\",\"rut\":\"76.000.000-0\"}"}
+          ]
+        },
+        {
+          "name": "PRUEBA 3 – GET Ver contacto empresa",
+          "request": { "method": "GET", "url": "{{base_url}}/clientes/1/contactos-empresa/1",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":{\"id\":1,\"razon_social\":\"90minutos SpA\"}}"}]
+        },
+        {
+          "name": "PRUEBA 4 – PUT Actualizar contacto empresa",
+          "request": { "method": "PUT", "url": "{{base_url}}/clientes/1/contactos-empresa/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"giro\": \"Comercio al por mayor de ropa deportiva\",\n  \"tipo_contacto\": \"Facturacion\"\n}"}},
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":{\"tipo_contacto\":\"Facturacion\"},\"message\":\"Contacto de empresa actualizado correctamente.\"}"}]
+        },
+        {
+          "name": "PRUEBA 5 – PATCH Actualizar campo específico",
+          "request": { "method": "PATCH", "url": "{{base_url}}/clientes/1/contactos-empresa/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"email_empresa\": \"facturacion@90minutos.cl\"\n}"}},
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":{\"email_empresa\":\"facturacion@90minutos.cl\"},\"message\":\"Contacto de empresa actualizado correctamente.\"}"}]
+        },
+        {
+          "name": "PRUEBA 6 – DELETE Eliminar contacto empresa",
+          "request": { "method": "DELETE", "url": "{{base_url}}/clientes/1/contactos-empresa/1",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","code":200,"body":"{\"message\":\"Contacto de empresa eliminado correctamente.\"}"}]
+        }
+      ]
+    },
+
+    {
+      "name": "👤 CONTACTOS PERSONAL",
+      "item": [
+        {
+          "name": "PRUEBA 1 – GET Listar contactos personales",
+          "request": { "method": "GET", "url": "{{base_url}}/clientes/1/contactos-personal",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":[],\"cliente\":\"90minutos\",\"total\":0}"}]
+        },
+        {
+          "name": "PRUEBA 2 – POST Crear contacto personal",
+          "request": { "method": "POST", "url": "{{base_url}}/clientes/1/contactos-personal",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"nombre\": \"Pedro\",\n  \"apellido\": \"Rojas\",\n  \"rut_personal\": \"12.345.678-9\",\n  \"cargo\": \"Encargado de Compras\",\n  \"area\": \"Compras\",\n  \"email\": \"pedro.rojas@90minutos.cl\",\n  \"celular\": \"+56 9 8765 4321\",\n  \"es_contacto_principal\": true,\n  \"notas\": \"Disponible lunes a viernes 9-18h\"\n}"}},
+          "response": [
+            {"name":"201 Created","code":201,"body":"{\"data\":{\"id\":1,\"nombre\":\"Pedro\",\"apellido\":\"Rojas\",\"es_contacto_principal\":true},\"message\":\"Contacto personal creado correctamente.\"}"},
+            {"name":"422 RUT inválido","code":422,"body":"{\"message\":\"El RUT personal ingresado no es válido.\",\"rut\":\"12.345.678-0\"}"}
+          ]
+        },
+        {
+          "name": "PRUEBA 3 – GET Ver contacto personal",
+          "request": { "method": "GET", "url": "{{base_url}}/clientes/1/contactos-personal/1",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":{\"id\":1,\"nombre\":\"Pedro\",\"apellido\":\"Rojas\"}}"}]
+        },
+        {
+          "name": "PRUEBA 4 – PUT Actualizar contacto personal",
+          "request": { "method": "PUT", "url": "{{base_url}}/clientes/1/contactos-personal/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"cargo\": \"Jefe de Compras\",\n  \"area\": \"Gerencia\"\n}"}},
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":{\"cargo\":\"Jefe de Compras\"},\"message\":\"Contacto personal actualizado correctamente.\"}"}]
+        },
+        {
+          "name": "PRUEBA 5 – PATCH Actualizar campo específico",
+          "request": { "method": "PATCH", "url": "{{base_url}}/clientes/1/contactos-personal/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"celular\": \"+56 9 1111 2222\"\n}"}},
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":{\"celular\":\"+56 9 1111 2222\"},\"message\":\"Contacto personal actualizado correctamente.\"}"}]
+        },
+        {
+          "name": "PRUEBA 6 – DELETE Eliminar contacto personal",
+          "request": { "method": "DELETE", "url": "{{base_url}}/clientes/1/contactos-personal/1",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","code":200,"body":"{\"message\":\"Contacto personal eliminado correctamente.\"}"}]
+        }
+      ]
+    },
+
+    {
+      "name": "💰 VENTAS",
+      "item": [
+        {
+          "name": "PRUEBA 1 – GET Listar ventas con resumen",
+          "request": { "method": "GET", "url": "{{base_url}}/ventas",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":[],\"resumen\":{\"total_ventas\":0,\"unidades_vendidas\":0,\"ingresos_totales\":0}}"}]
+        },
+        {
+          "name": "PRUEBA 2 – POST Registrar venta",
+          "request": { "method": "POST", "url": "{{base_url}}/ventas",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"cliente_id\": 1,\n  \"camiseta_id\": 1,\n  \"talla_id\": 2,\n  \"cantidad\": 5,\n  \"observaciones\": \"Pedido urgente apertura de tienda\"\n}"}},
+          "response": [
+            {"name":"201 Created","code":201,"body":"{\"data\":{\"id\":1,\"total_venta\":190000},\"resumen\":{\"precio_base\":45000,\"precio_final\":38000,\"descuento_aplicado\":\"precio_oferta\",\"porcentaje_ahorro\":\"15.56%\",\"total_venta\":190000}}"},
+            {"name":"409 Stock insuficiente","code":409,"body":"{\"message\":\"Stock insuficiente para la talla seleccionada.\",\"stock_disponible\":3}"}
+          ]
+        },
+        {
+          "name": "PRUEBA 3 – GET Estadísticas de ventas",
+          "request": { "method": "GET", "url": "{{base_url}}/ventas/estadisticas",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","code":200,"body":"{\"totales\":{\"ventas_confirmadas\":1,\"unidades_totales\":5,\"ingresos_totales\":190000},\"por_camiseta\":[{\"camiseta_id\":1,\"unidades_vendidas\":5}],\"por_cliente\":[{\"cliente_id\":1,\"total_gastado\":190000}]}"}]
+        },
+        {
+          "name": "PRUEBA 4 – GET Ver detalle de venta",
+          "request": { "method": "GET", "url": "{{base_url}}/ventas/1",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":{\"id\":1,\"cantidad\":5,\"total_venta\":190000,\"estado\":\"confirmada\"}}"}]
+        },
+        {
+          "name": "PRUEBA 5 – PATCH Cambiar estado de venta",
+          "request": { "method": "PATCH", "url": "{{base_url}}/ventas/1",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Accept","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"estado\": \"anulada\",\n  \"observaciones\": \"Cliente canceló el pedido\"\n}"}},
+          "response": [{"name":"200 OK","code":200,"body":"{\"data\":{\"estado\":\"anulada\"},\"message\":\"Venta actualizada correctamente.\"}"}]
+        },
+        {
+          "name": "PRUEBA 6 – DELETE Eliminar venta (solo pendientes)",
+          "request": { "method": "DELETE", "url": "{{base_url}}/ventas/1",
+            "header": [{"key":"Accept","value":"application/json"}] },
+          "response": [
+            {"name":"200 OK","code":200,"body":"{\"message\":\"Venta eliminada correctamente.\"}"},
+            {"name":"409 Confirmada","code":409,"body":"{\"message\":\"No se puede eliminar una venta confirmada. Use PATCH para cambiar el estado a \\\"anulada\\\".\"}"}
+          ]
+        }
+      ]
+    }
+
+  ]
+}

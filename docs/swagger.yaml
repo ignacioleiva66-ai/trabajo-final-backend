@@ -1,0 +1,581 @@
+openapi: 3.0.3
+info:
+  title: TodoCamisetas API
+  description: |
+    API RESTful para gestión de inventario y clientes B2B de **TodoCamisetas**.
+
+    ## Base URL
+    `http://localhost:8000/api`
+
+    ## Logística de Precios
+    | Condición | precio_final |
+    |-----------|-------------|
+    | Cliente Preferencial + `precio_oferta` definido | `precio_oferta` |
+    | Cliente con `porcentaje_oferta > 0` | `precio * (1 - porcentaje/100)` |
+    | Ambas aplican | el **menor** de los dos |
+    | Ninguna | precio base |
+
+    ## Validación de RUT
+    Todos los RUT se validan con algoritmo módulo 11 (estándar SII Chile).
+    Formato aceptado: `12.345.678-9`, `12345678-9` o `123456789`.
+  version: 2.0.0
+
+servers:
+  - url: http://localhost:8000/api
+    description: Docker local
+
+tags:
+  - name: Camisetas
+  - name: Clientes
+  - name: Tallas
+  - name: Contactos Empresa
+  - name: Contactos Personal
+  - name: Ventas
+
+paths:
+
+  # ════════════════════════════════════════════════════════════
+  # CAMISETAS – 6 pruebas
+  # ════════════════════════════════════════════════════════════
+
+  /camisetas:
+    get:
+      tags: [Camisetas]
+      summary: "PRUEBA 1 – Listar todas las camisetas"
+      responses:
+        '200':
+          description: Lista con tallas
+          content:
+            application/json:
+              example:
+                data:
+                  - id: 1
+                    titulo: "Camiseta Local 2025 – Selección Chilena"
+                    club: "Selección Chilena"
+                    precio: "45000.00"
+                    precio_oferta: "38000.00"
+                    codigo_producto: "SCL2025L"
+                    tallas: [{id: 1, nombre: "M", pivot: {stock: 20}}]
+
+    post:
+      tags: [Camisetas]
+      summary: "PRUEBA 2 – Crear camiseta"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              titulo: "Camiseta Local 2025 – Selección Chilena"
+              club: "Selección Chilena"
+              pais: "Chile"
+              tipo: "Local"
+              color: "Rojo y Azul"
+              precio: 45000
+              precio_oferta: 38000
+              detalles: "Edición aniversario 2025"
+              codigo_producto: "SCL2025L"
+              tallas:
+                - talla_id: 1
+                  stock: 20
+      responses:
+        '201': {description: Creada}
+        '422': {description: Error validación}
+
+  /camisetas/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: integer}, example: 1}
+    get:
+      tags: [Camisetas]
+      summary: "PRUEBA 3 – Ver camiseta por ID"
+      responses:
+        '200': {description: OK}
+        '404': {description: No encontrada}
+    put:
+      tags: [Camisetas]
+      summary: "PRUEBA 4 – Actualizar camiseta (PUT completo)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              precio: 48000
+              precio_oferta: 40000
+              tallas:
+                - talla_id: 1
+                  stock: 25
+      responses:
+        '200': {description: Actualizada}
+    patch:
+      tags: [Camisetas]
+      summary: "PRUEBA 5 – Actualizar campo específico (PATCH)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              precio_oferta: 36000
+      responses:
+        '200': {description: Actualizada}
+    delete:
+      tags: [Camisetas]
+      summary: "PRUEBA 6 – Eliminar camiseta"
+      responses:
+        '200': {description: Eliminada}
+        '404': {description: No encontrada}
+
+  /camisetas/{id}/precio:
+    get:
+      tags: [Camisetas]
+      summary: Precio final según cliente
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: integer}}
+        - {name: cliente_id, in: query, required: true, schema: {type: integer}, description: "ID del cliente para calcular precio final"}
+      responses:
+        '200':
+          description: Camiseta con precio_final calculado
+          content:
+            application/json:
+              example:
+                data:
+                  id: 1
+                  precio: "45000.00"
+                  precio_oferta: "38000.00"
+                  precio_final: 38000
+                  descuento_aplicado: "precio_oferta"
+                  cliente_nombre: "90minutos"
+                  cliente_categoria: "Preferencial"
+
+  # ════════════════════════════════════════════════════════════
+  # CLIENTES – 6 pruebas
+  # ════════════════════════════════════════════════════════════
+
+  /clientes:
+    get:
+      tags: [Clientes]
+      summary: "PRUEBA 1 – Listar todos los clientes"
+      responses:
+        '200':
+          description: Lista de clientes
+          content:
+            application/json:
+              example:
+                data: [{id: 1, nombre_comercial: "90minutos", categoria: "Preferencial"}]
+                total: 2
+    post:
+      tags: [Clientes]
+      summary: "PRUEBA 2 – Crear cliente (RUT se valida con módulo 11)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              nombre_comercial: "90minutos"
+              rut: "76.123.456-7"
+              direccion: "Providencia, Santiago"
+              categoria: "Preferencial"
+              contacto_nombre: "Pedro Rojas"
+              contacto_email: "compras@90minutos.cl"
+              porcentaje_oferta: 15
+      responses:
+        '201': {description: Creado}
+        '422':
+          description: RUT inválido o error de validación
+          content:
+            application/json:
+              example:
+                message: "El RUT ingresado no es válido."
+                rut: "12.345.678-0"
+
+  /clientes/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: integer}, example: 1}
+    get:
+      tags: [Clientes]
+      summary: "PRUEBA 3 – Ver cliente con contactos"
+      responses:
+        '200': {description: OK}
+        '404': {description: No encontrado}
+    put:
+      tags: [Clientes]
+      summary: "PRUEBA 4 – Actualizar cliente completo"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              porcentaje_oferta: 20
+              categoria: "Preferencial"
+      responses:
+        '200': {description: Actualizado}
+    patch:
+      tags: [Clientes]
+      summary: "PRUEBA 5 – Actualizar campo específico"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              porcentaje_oferta: 25
+      responses:
+        '200': {description: Actualizado}
+    delete:
+      tags: [Clientes]
+      summary: "PRUEBA 6 – Eliminar cliente"
+      description: "Error 409 si tiene camisetas o ventas asociadas."
+      responses:
+        '200': {description: Eliminado}
+        '409':
+          description: Tiene registros asociados
+          content:
+            application/json:
+              example:
+                message: "No se puede eliminar el cliente porque tiene ventas registradas."
+
+  /clientes/{cliente_id}/camisetas:
+    get:
+      tags: [Clientes]
+      summary: Camisetas del cliente con precio_final
+      parameters:
+        - {name: cliente_id, in: path, required: true, schema: {type: integer}}
+      responses:
+        '200': {description: Lista con precio_final calculado}
+
+  # ════════════════════════════════════════════════════════════
+  # CONTACTOS EMPRESA – 6 pruebas
+  # ════════════════════════════════════════════════════════════
+
+  /clientes/{clienteId}/contactos-empresa:
+    parameters:
+      - {name: clienteId, in: path, required: true, schema: {type: integer}, example: 1}
+    get:
+      tags: [Contactos Empresa]
+      summary: "PRUEBA 1 – Listar contactos de empresa"
+      responses:
+        '200':
+          description: Lista de contactos
+          content:
+            application/json:
+              example:
+                data: [{id: 1, razon_social: "90minutos SpA", rut_empresa: "76.123.456-7", tipo_contacto: "Principal"}]
+                total: 1
+    post:
+      tags: [Contactos Empresa]
+      summary: "PRUEBA 2 – Crear contacto de empresa"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              razon_social: "90minutos SpA"
+              rut_empresa: "76.123.456-7"
+              giro: "Comercio al por menor de artículos deportivos"
+              direccion_fiscal: "Av. Providencia 1234, Of. 56"
+              ciudad: "Santiago"
+              region: "Metropolitana"
+              telefono_empresa: "+56 2 2345 6789"
+              email_empresa: "admin@90minutos.cl"
+              sitio_web: "https://www.90minutos.cl"
+              tipo_contacto: "Principal"
+      responses:
+        '201': {description: Creado}
+        '422': {description: RUT inválido o error de validación}
+
+  /clientes/{clienteId}/contactos-empresa/{id}:
+    parameters:
+      - {name: clienteId, in: path, required: true, schema: {type: integer}}
+      - {name: id, in: path, required: true, schema: {type: integer}}
+    get:
+      tags: [Contactos Empresa]
+      summary: "PRUEBA 3 – Ver contacto de empresa"
+      responses:
+        '200': {description: OK}
+        '404': {description: No encontrado}
+    put:
+      tags: [Contactos Empresa]
+      summary: "PRUEBA 4 – Actualizar contacto de empresa (PUT)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              giro: "Comercio al por mayor de ropa deportiva"
+              tipo_contacto: "Facturacion"
+      responses:
+        '200': {description: Actualizado}
+    patch:
+      tags: [Contactos Empresa]
+      summary: "PRUEBA 5 – Actualizar campo específico (PATCH)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              email_empresa: "facturacion@90minutos.cl"
+      responses:
+        '200': {description: Actualizado}
+    delete:
+      tags: [Contactos Empresa]
+      summary: "PRUEBA 6 – Eliminar contacto de empresa"
+      responses:
+        '200': {description: Eliminado}
+        '404': {description: No encontrado}
+
+  # ════════════════════════════════════════════════════════════
+  # CONTACTOS PERSONAL – 6 pruebas
+  # ════════════════════════════════════════════════════════════
+
+  /clientes/{clienteId}/contactos-personal:
+    parameters:
+      - {name: clienteId, in: path, required: true, schema: {type: integer}, example: 1}
+    get:
+      tags: [Contactos Personal]
+      summary: "PRUEBA 1 – Listar contactos personales"
+      responses:
+        '200':
+          description: Lista de contactos
+          content:
+            application/json:
+              example:
+                data: [{id: 1, nombre: "Pedro", apellido: "Rojas", cargo: "Encargado de Compras", es_contacto_principal: true}]
+    post:
+      tags: [Contactos Personal]
+      summary: "PRUEBA 2 – Crear contacto personal"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              nombre: "Pedro"
+              apellido: "Rojas"
+              rut_personal: "12.345.678-9"
+              cargo: "Encargado de Compras"
+              area: "Compras"
+              email: "pedro.rojas@90minutos.cl"
+              celular: "+56 9 8765 4321"
+              es_contacto_principal: true
+              notas: "Disponible lunes a viernes 9-18h"
+      responses:
+        '201': {description: Creado}
+        '422': {description: RUT inválido o error de validación}
+
+  /clientes/{clienteId}/contactos-personal/{id}:
+    parameters:
+      - {name: clienteId, in: path, required: true, schema: {type: integer}}
+      - {name: id, in: path, required: true, schema: {type: integer}}
+    get:
+      tags: [Contactos Personal]
+      summary: "PRUEBA 3 – Ver contacto personal"
+      responses:
+        '200': {description: OK}
+        '404': {description: No encontrado}
+    put:
+      tags: [Contactos Personal]
+      summary: "PRUEBA 4 – Actualizar contacto personal (PUT)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              cargo: "Jefe de Compras"
+              area: "Gerencia"
+      responses:
+        '200': {description: Actualizado}
+    patch:
+      tags: [Contactos Personal]
+      summary: "PRUEBA 5 – Actualizar campo específico (PATCH)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              celular: "+56 9 1111 2222"
+      responses:
+        '200': {description: Actualizado}
+    delete:
+      tags: [Contactos Personal]
+      summary: "PRUEBA 6 – Eliminar contacto personal"
+      responses:
+        '200': {description: Eliminado}
+        '404': {description: No encontrado}
+
+  # ════════════════════════════════════════════════════════════
+  # VENTAS – 6 pruebas
+  # ════════════════════════════════════════════════════════════
+
+  /ventas:
+    get:
+      tags: [Ventas]
+      summary: "PRUEBA 1 – Listar ventas con resumen"
+      parameters:
+        - {name: cliente_id,  in: query, schema: {type: integer}}
+        - {name: camiseta_id, in: query, schema: {type: integer}}
+        - {name: estado,      in: query, schema: {type: string, enum: [pendiente, confirmada, anulada]}}
+      responses:
+        '200':
+          description: Lista de ventas + resumen
+          content:
+            application/json:
+              example:
+                data: [{id: 1, cantidad: 5, precio_final_unitario: 38000, total_venta: 190000}]
+                resumen:
+                  total_ventas: 1
+                  unidades_vendidas: 5
+                  ingresos_totales: 190000
+    post:
+      tags: [Ventas]
+      summary: "PRUEBA 2 – Registrar venta (calcula precio y descuento automáticamente)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              cliente_id: 1
+              camiseta_id: 1
+              talla_id: 2
+              cantidad: 5
+              observaciones: "Pedido urgente para apertura de tienda"
+      responses:
+        '201':
+          description: Venta registrada con desglose de precios
+          content:
+            application/json:
+              example:
+                data: {id: 1, total_venta: 190000}
+                resumen:
+                  precio_base: 45000
+                  precio_final: 38000
+                  descuento_aplicado: "precio_oferta"
+                  porcentaje_ahorro: "15.56%"
+                  total_venta: 190000
+        '409': {description: Stock insuficiente}
+
+  /ventas/estadisticas:
+    get:
+      tags: [Ventas]
+      summary: "PRUEBA 3 – Estadísticas (conteo de ventas por camiseta y cliente)"
+      responses:
+        '200':
+          description: Estadísticas de ventas
+          content:
+            application/json:
+              example:
+                totales:
+                  ventas_confirmadas: 10
+                  unidades_totales: 47
+                  ingresos_totales: 2115000
+                por_camiseta:
+                  - camiseta_id: 1
+                    unidades_vendidas: 30
+                    ingreso_total: 1140000
+                por_cliente:
+                  - cliente_id: 1
+                    unidades_compradas: 30
+                    total_gastado: 1140000
+
+  /ventas/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: integer}, example: 1}
+    get:
+      tags: [Ventas]
+      summary: "PRUEBA 4 – Ver detalle de una venta"
+      responses:
+        '200': {description: OK}
+        '404': {description: No encontrada}
+    patch:
+      tags: [Ventas]
+      summary: "PRUEBA 5 – Cambiar estado de venta (PATCH)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              estado: "anulada"
+              observaciones: "Cliente canceló el pedido"
+      responses:
+        '200': {description: Actualizada}
+    delete:
+      tags: [Ventas]
+      summary: "PRUEBA 6 – Eliminar venta (solo pendientes)"
+      description: "Las ventas confirmadas no se pueden eliminar, solo anular con PATCH."
+      responses:
+        '200': {description: Eliminada}
+        '409': {description: No se puede eliminar una venta confirmada}
+
+  # ════════════════════════════════════════════════════════════
+  # TALLAS – 6 pruebas
+  # ════════════════════════════════════════════════════════════
+
+  /tallas:
+    get:
+      tags: [Tallas]
+      summary: "PRUEBA 1 – Listar tallas"
+      responses:
+        '200': {description: Lista}
+    post:
+      tags: [Tallas]
+      summary: "PRUEBA 2 – Crear talla"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {nombre: "XXL"}
+      responses:
+        '201': {description: Creada}
+
+  /tallas/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: integer}, example: 1}
+    get:
+      tags: [Tallas]
+      summary: "PRUEBA 3 – Ver talla"
+      responses:
+        '200': {description: OK}
+    put:
+      tags: [Tallas]
+      summary: "PRUEBA 4 – Actualizar talla (PUT)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {nombre: "3XL"}
+      responses:
+        '200': {description: Actualizada}
+    patch:
+      tags: [Tallas]
+      summary: "PRUEBA 5 – Actualizar talla (PATCH)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {nombre: "XS"}
+      responses:
+        '200': {description: Actualizada}
+    delete:
+      tags: [Tallas]
+      summary: "PRUEBA 6 – Eliminar talla"
+      responses:
+        '200': {description: Eliminada}
+        '409': {description: En uso por camisetas}
+
+components:
+  responses:
+    NotFound:
+      description: No encontrado
+      content:
+        application/json:
+          example: {message: "Recurso no encontrado."}
+    ValidationError:
+      description: Error de validación
+      content:
+        application/json:
+          example:
+            message: "Error de validación."
+            errors:
+              campo: ["El campo es requerido."]
+    RutInvalido:
+      description: RUT inválido
+      content:
+        application/json:
+          example:
+            message: "El RUT ingresado no es válido."
+            rut: "12.345.678-0"
