@@ -1,0 +1,16 @@
+workspace:
+  id: 005d5aee-6cad-4c34-8ffa-eea4e1674003
+localResources:
+  collections:
+    - ..\postman_collection.json
+    - ../postman_collection.json
+    - ../postman/collections/New Collection
+  specs:
+    - ..\swagger.yaml
+    - ../swagger.yaml
+cloudResources:
+  collections:
+    ../postman_collection.json: 54058441-16e1aed2-6978-4819-a713-b75750966e8c
+    ../postman/collections/New Collection: 54058441-c53e79f0-f75d-4616-b61f-d01d463da6e9
+  specs:
+    ../swagger.yaml: b7e65543-520e-48db-901f-1a7f23bf6f73
